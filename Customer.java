@@ -9,7 +9,7 @@ public class Customer{
 	/** Default constructor. Sets name to "No name yet" and ID to -1.
 	*/
 	public Customer( ){
-		this.name = "No name yet";
+		this.name = "";
 		this.customerID = 0;
 	}
 	

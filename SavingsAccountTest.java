@@ -4,61 +4,105 @@ import org.junit.Test;
 
 public class SavingsAccountTest
 {
-
-    @Test
-    public void test_getMonthlyFeesAndInterestLowBalance()
-    {
+	// test constructors
+	@Test
+    public void test_creation(){
         SavingsAccount s = new SavingsAccount();
-        s.setAnnualInterestRate(5.8);
-        s.deposit(100);
-        assertEquals(-4.516666667, s.getMonthlyFeesAndInterest(), 0.00001);
-		assertEquals("Balance should not have changed after calling getMonthlyFeesAndInterest", 100.0,s.getBalance(),0.00001);
-		s.monthEndUpdate();
-		assertEquals("Balance should have changed after calling monthEndUpdate", 95.483333333,s.getBalance(), 0.00001);	
+        assertEquals("Expected initial balance to be 0.0", 0.0, s.getBalance(), 0.00001);
+    }
+
+
+    	@Test
+	public void test_constructorWithInterestAndBalance()
+	{
+		SavingsAccount s = new SavingsAccount(50.0, 1.5);
+		assertEquals("Unexpected balance", 50.0, s.getBalance(), 0.00001);
+		assertEquals("Unexpected interest rate", 1.5, s.getAnnualInterestRate(), 0.00001);
+		assertEquals("Unexpected customer", "", s.getCustomer().getName());
 	}
-    
-    @Test
-    public void test_getMonthlyFeesAndInterestHighBalance()
-    {
+	
+	@Test
+	public void test_constructorWithCustomerAndBalance()
+	{
+		Customer c = new Customer("John Doe", 321);
+		SavingsAccount s = new SavingsAccount(50.0, 1.5);
+		assertEquals("Unexpected balance",50.0,s.getBalance(), 0.00001);
+	}
+	
+	// Testing deposit
+	    
+	@Test
+    public void test_deposit() {
         SavingsAccount s = new SavingsAccount();
-        s.setAnnualInterestRate(5.8);
-        s.deposit(1001);
-        assertEquals(4.838166666667, s.getMonthlyFeesAndInterest(), 0.00001);
-		assertEquals("Balance should not have changed after calling getMonthlyFeesAndInterest", 1001.0,s.getBalance(),0.00001);
-		s.monthEndUpdate();
-		assertEquals("Balance should have changed after calling monthEndUpdate", 1005.838166667, s.getBalance(),0.00001);
+        s.deposit(10.25);
+        assertEquals("Deposited 10.25.", 10.25, s.getBalance(), 0.000001);
+    }
+    
+	@Test
+    public void test_deposit_negativeAmount() {
+        SavingsAccount s = new SavingsAccount();
+        s.deposit(-10.25);
+        assertEquals("Tried to deposit a negative amount", 0.00, s.getBalance(), 0.000001);
+    }
+        
+    // testing withdraw
+	@Test
+    public void test_withdraw_sufficientBalance() {
+        SavingsAccount s = new SavingsAccount();
+        s.deposit(500.00);
+        s.withdraw(44.25);
+        assertEquals("Withdrew 44.25 after depositing 500.00", 455.75, s.getBalance(), 0.000001);
+    }
+    
+	@Test
+    public void test_withdraw_overdraft() {
+        SavingsAccount s = new SavingsAccount();
+        s.deposit(5.00);
+        s.withdraw(5.01);
+        assertEquals("Withdrew 5.01 after depositing 5.00", -0.01, s.getBalance(), 0.000001);
     }
 	
 	@Test
-    public void test_CheckingStaticInterestRate()
-    {
-        SavingsAccount s1 = new SavingsAccount();
-		SavingsAccount s2 = new SavingsAccount();
-        
-		SavingsAccount.setAnnualInterestRate(5.4);
-        s1.setAnnualInterestRate(5.7);
+	public void test_setOverdraftAmount_setToZero() {
+		SavingsAccount s = new SavingsAccount();
+		s.setOverdraftAmount(0.0);
+		s.withdraw(1.0);
+        assertEquals("Withdrew 1.0 from account with zero balance and zero overdraftAmount", 0.0, s.getBalance(), 0.000001);
 		
-		
-        assertEquals("Interest rate should be same for both the instances of saving account", s1.getAnnualInterestRate(), 5.7, 0.00001);
-		assertEquals("Interest rate should be same for both the instances of saving account", s2.getAnnualInterestRate(), 5.7, 0.00001);
-		
-    }
+	}
+	
+	@Test
+	public void test_setAnnualInterestRate_normalSet()
+	{
+		SavingsAccount s = new SavingsAccount();
+		s.setAnnualInterestRate(5.8);
+		assertEquals("Annual interest rate is 5.8", 5.8, s.getAnnualInterestRate(), 0.000001); 
+	}
 
-	@Test
-    public void test_getMonthlyFeesAndInterestUsingStaticInterestRate()
-    {
-		SavingsAccount s1 = new SavingsAccount();
-		SavingsAccount s2 = new SavingsAccount();
-        
-		SavingsAccount.setAnnualInterestRate(5.4);
-        s1.setAnnualInterestRate(5.8);
-		
-		s1.deposit(1001);
-		s2.deposit(1001);
-		
-		assertEquals("Interest should be computed using the static annual interest rate", 4.838166666667, s1.getMonthlyFeesAndInterest(), 0.00001);
-		assertEquals("Interest should be computed using the static annual interest rate", 4.838166666667, s2.getMonthlyFeesAndInterest(), 0.00001);
-		
-    }
-	
+	public void test_setAnnualInterestRate_negativeRate()
+	{
+		SavingsAccount s = new SavingsAccount();
+		s.setAnnualInterestRate(5.8);
+		s.setAnnualInterestRate(-10.0);
+		assertEquals("Annual interest rate should not be negative", 5.8, s.getAnnualInterestRate(), 0.000001);
+	}
+
+	public void test_depositMonthlyInterest()
+	{
+		SavingsAccount s = new SavingsAccount();
+		s.setAnnualInterestRate(12.0);
+		s.deposit(100);
+		s.depositMonthlyInterest();
+		assertEquals("Balance should have increased by interest rate/12 * balance", 101.0, s.getBalance(), 0.00001);
+	}
+
+	public void test_depositMonthlyInterest_negativebalance()
+	{
+		SavingsAccount s = new SavingsAccount();
+		s.setAnnualInterestRate(12.0);
+		s.withdraw(100.0);
+		s.depositMonthlyInterest();
+		assertEquals("Balance should not have interest added to it", -100.0, s.getBalance(), 0.00001);	
+	}
+
 }
